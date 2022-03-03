@@ -151,9 +151,6 @@ def solve_it(input_data):
     # prepare the solution in the specified output format
     output_data = str(int(search_tree.best_obj)) + ' ' + str(1) + '\n'
 
-    # print(search_tree.best_solution)
-    # print(items_sorted)
-    # print(search_tree.item_count)
 
     solution = ['0']*search_tree.item_count
 
