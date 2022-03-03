@@ -24,8 +24,10 @@ class Point:
     def out_neighbour(self, in_neighbour: int) -> int:
         if self.neighbours.index(in_neighbour) == 0:
             return self.neighbours[1]
-        else:
+        elif self.neighbours.index(in_neighbour) == 1:
             return self.neighbours[0]
+        else:
+            raise Exception
 
 
 def distance(point1, point2):
@@ -143,37 +145,42 @@ def solve_it(input_data):
     dist_mat = distance_matrix(points)
     solution = get_greedy_solution(points, dist_mat)
     closed_solution = solution + [solution[0]]
+    assert varify_solution(solution, node_count)
+    print(solution)
 
-
-    for i in range(200000):
-        t_1, t_2 = longest_edge(solution, dist_mat, node_count)
+    for i in range(1000000):
+        # t_1, t_2 = longest_edge(solution, dist_mat, node_count)
         # rand = random.randint(0, node_count-1)
         # t_4 = closed_solution[rand]
         # t_3 = closed_solution[rand+1]
 
-        t_3 = sample_close_points([t_1], t_2, dist_mat, node_count)  # in
-        t_4 = solution[(solution.index(t_3) - 1) % node_count]  # out
+        # t_3 = sample_close_points([t_1], t_2, dist_mat, node_count)  # in
+        # t_4 = solution[(solution.index(t_3) - 1) % node_count]  # out
 
-        assert t_3 not in [t_1, t_2]
-        # if t_4 in [t_1, t_2]:
-            # print(t_1, t_2, t_3, t_4)
-            # print(solution)
-            # assert False
-
+        # assert t_3 not in [t_1, t_2]
 
         # original distance of two edges
-        ori_distance = dist_mat[(t_1, t_2)] + dist_mat[(t_4, t_3)]
-        new_distance = dist_mat[(t_1, t_4)] + dist_mat[(t_3, t_2)]
+        # ori_distance = dist_mat[(t_1, t_2)] + dist_mat[(t_4, t_3)]
+        # new_distance = dist_mat[(t_1, t_4)] + dist_mat[(t_3, t_2)]
+        #
+        # t_5 = sample_close_points([t_1, t_2, t_3], t_3, dist_mat, node_count)
+        # t_6 = solution[(solution.index(t_5) - 1) % node_count]
 
-        t_5 = sample_close_points([t_1, t_2, t_3, t_4], t_4, dist_mat, node_count)
-        t_6 = solution[(solution.index(t_5) - 1) % node_count]
-
-        assert t_5 not in [t_1, t_2, t_3, t_4]
+        # assert t_5 not in [t_1, t_2, t_3, t_4]
         # assert t_6 not in [t_1, t_2, t_3, t_4]
 
+        rand_ints = np.random.choice(range(node_count), 3, replace=False)
+        rand_ints.sort()
+        t_1, t_2 = closed_solution[rand_ints[0]], closed_solution[rand_ints[0]+1]
+        t_3, t_4 = closed_solution[rand_ints[1]], closed_solution[rand_ints[1] + 1]
+        t_5, t_6 = closed_solution[rand_ints[2]], closed_solution[rand_ints[2] + 1]
 
-        ori_distance_2 = dist_mat[(t_6, t_5)] + dist_mat[(t_1, t_2)] + dist_mat[(t_4, t_3)]
-        new_distance_2 = dist_mat[(t_1, t_6)] + dist_mat[(t_5, t_4)] + dist_mat[(t_3, t_2)]
+        ori_distance = dist_mat[(t_6, t_5)] + dist_mat[(t_1, t_2)] + dist_mat[(t_4, t_3)]
+
+        new_distance_e = dist_mat[(t_1, t_3)] + dist_mat[(t_6, t_4)] + dist_mat[(t_5, t_2)]
+        new_distance_f = dist_mat[(t_1, t_5)] + dist_mat[(t_2, t_4)] + dist_mat[(t_3, t_6)]
+        new_distance_g = dist_mat[(t_1, t_4)] + dist_mat[(t_2, t_6)] + dist_mat[(t_3, t_5)]
+        new_distance_h = dist_mat[(t_1, t_4)] + dist_mat[(t_2, t_5)] + dist_mat[(t_3, t_6)]
 
 
         # if new_distance < ori_distance:
@@ -190,9 +197,9 @@ def solve_it(input_data):
         #     points[t_2].neighbours.append(t_3)
         #     points[t_3].neighbours.append(t_2)
         #
-
-        if new_distance_2 < ori_distance_2:
-            # swap
+        min_new_distance = min(new_distance_e, new_distance_f, new_distance_g, new_distance_h)
+        min_delta = min_new_distance - ori_distance
+        if min_delta < 0:
             points[t_1].neighbours.remove(t_2)
             points[t_2].neighbours.remove(t_1)
 
@@ -202,30 +209,58 @@ def solve_it(input_data):
             points[t_6].neighbours.remove(t_5)
             points[t_5].neighbours.remove(t_6)
 
-            points[t_1].neighbours.append(t_6)
-            points[t_6].neighbours.append(t_1)
+            if min_new_distance == new_distance_e:
+                points[t_1].neighbours.append(t_3)
+                points[t_3].neighbours.append(t_1)
 
-            points[t_2].neighbours.append(t_3)
-            points[t_3].neighbours.append(t_2)
+                points[t_6].neighbours.append(t_4)
+                points[t_4].neighbours.append(t_6)
 
-            points[t_5].neighbours.append(t_4)
-            points[t_4].neighbours.append(t_5)
+                points[t_5].neighbours.append(t_2)
+                points[t_2].neighbours.append(t_5)
 
+            elif min_new_distance == new_distance_f:
+                points[t_1].neighbours.append(t_5)
+                points[t_5].neighbours.append(t_1)
+
+                points[t_2].neighbours.append(t_4)
+                points[t_4].neighbours.append(t_2)
+
+                points[t_3].neighbours.append(t_6)
+                points[t_6].neighbours.append(t_3)
+
+            elif min_new_distance == new_distance_g:
+                points[t_1].neighbours.append(t_4)
+                points[t_4].neighbours.append(t_1)
+
+                points[t_6].neighbours.append(t_2)
+                points[t_2].neighbours.append(t_6)
+
+                points[t_5].neighbours.append(t_3)
+                points[t_3].neighbours.append(t_5)
+
+            elif min_new_distance == new_distance_h:
+                points[t_1].neighbours.append(t_4)
+                points[t_4].neighbours.append(t_1)
+
+                points[t_6].neighbours.append(t_3)
+                points[t_3].neighbours.append(t_6)
+
+                points[t_5].neighbours.append(t_2)
+                points[t_2].neighbours.append(t_5)
 
 
             solution = get_solution(points)
             closed_solution = solution + [solution[0]]
 
             # print(t_4, ori_distance, new_distance, new_distance < ori_distance)
-            print(f'improved {ori_distance - new_distance:.2f} @ {i}th iteration')
+            print(f'improved {min_delta:.2f} @ {i}th iteration')
             # print(solution)
             if not varify_solution(solution, node_count):
                 print(t_1, t_2, t_3, t_4, t_5, t_6)
                 print('failed', solution, len(set(solution)))
                 assert False
-            else:
-                print(t_1, t_2, t_3, t_4, t_5, t_6)
-                print('success')
+
 
     # print(solution)
 
